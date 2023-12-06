@@ -1,0 +1,11 @@
+﻿<div class="no-trails">
+    <div><span class="bi bi-tree" /></div>
+    <h3 class="text-muted font-weight-light">
+        @ChildContent
+    </h3>
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

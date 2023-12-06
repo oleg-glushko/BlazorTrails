@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+	<NpmLastInstall>node_modules/.last-install</NpmLastInstall>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazored.FluentValidation" Version="2.1.0" />
+    <PackageReference Include="Blazored.LocalStorage" Version="4.4.0" />
+    <PackageReference Include="MediatR" Version="12.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    <PackageReference Include="Scrutor" Version="4.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Watch Include="**/*.scss" />
+    <Content Remove="Features\ManageTrails\InputTime.razor" />
+    <Content Remove="Features\ManageTrails\_Imports.razor" />
+    <Watch Remove="features\home\SearchFilter.razor.scss" />
+    <Watch Remove="Features\Home\TrailSearch.razor.scss" />
+    <Watch Remove="features\managetrails\FormSection.razor.scss" />
+    <Watch Remove="features\managetrails\InputTime.razor.scss" />
+    <Watch Remove="features\managetrails\shared\InputRouteMap.razor.scss" />
+    <Watch Remove="features\shared\NoTrails.razor.scss" />
+    <None Include="Features\ManageTrails\Shared\InputTime.razor" />
+    <None Include="Features\ManageTrails\_Imports.razor" />
+    <ProjectReference Include="..\BlazingTrails.ComponentLibrary\BlazingTrails.ComponentLibrary.csproj" />
+    <ProjectReference Include="..\BlazingTrails.Shared\BlazingTrails.Shared.csproj" />
+    <None Update="**/*.css" Watch="false" />
+  </ItemGroup>
+
+  <Target Name="CheckForNpm" BeforeTargets="RunNpmInstall">
+    <Exec Command="npm --version" ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
+    </Exec>
+    <Error Condition="'$(ErrorCode)' != '0'" Text="NPM is required to build this project." />
+  </Target>
+
+  <Target Name="RunNpmInstall" BeforeTargets="CompileScopedCss" Inputs="package.json" Outputs="$(NpmLastInstall)">
+    <Exec Command="npm install" />
+    <Touch Files="$(NpmLastInstall)" AlwaysCreate="true" />
+  </Target>
+  
+  <Target Name="CompileScopedCss" BeforeTargets="Compile">
+    <ItemGroup>
+      <ScopedScssFiles Include="Features/**/*.razor.scss" />	  
+    </ItemGroup>
+    <Exec Command="npm run sass -- %(ScopedScssFiles.Identity) %(relativedir)%(filename).css" />
+  </Target>
+</Project>

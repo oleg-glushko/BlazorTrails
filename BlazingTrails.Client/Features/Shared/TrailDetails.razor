@@ -1,0 +1,69 @@
+﻿@using BlazingTrails.ComponentLibrary.Map
+
+<div class="drawer-wrapper @(_isOpen ? "slide" : "")">
+    <div class="drawer-mask"></div>
+    <div class="drawer">
+        @if (_activeTrail is not null)
+        {
+            <div class="drawer-content">
+                @{
+                    var image = !string.IsNullOrWhiteSpace(_activeTrail.Image)
+                    ? $"images/{_activeTrail.Image}"
+                    : "images/noimage.png";
+                }
+                <img src="@image" />
+                <div class="trail-details">
+                    <h3>@_activeTrail.Name</h3>
+                    <h6 class="mb-3 text-muted">
+                        <span class="bi bi-pin-map"></span>
+                        @_activeTrail.Location
+                    </h6>
+                    <div class="mt-4">
+                        <span class="mt-4">
+                            <span class="bi bi-clock mr-2"></span>
+                            @_activeTrail.TimeFormatted
+                        </span>
+                        <span>
+                            <span class="bi bi-infinity mr-2"></span>
+                            @_activeTrail.Length km
+                        </span>
+                    </div>
+                    <p class="mt-4">@_activeTrail.Description</p>
+                </div>
+                <div>
+                    @if (_activeTrail.Waypoints.Any())
+                    {
+                        <RouteMap Waypoints="_activeTrail.Waypoints" Width="100%" IsReadonly="true" />
+                    }
+                </div>
+            </div>
+            <div class="drawer-controls">
+                <button class="btn btn-secondary" @onclick="Close">Close</button>
+            </div>
+        }
+    </div>
+</div>
+
+
+@code {
+    private bool _isOpen;
+    private Trail? _activeTrail;
+
+    [Parameter, EditorRequired]
+    public Trail? Trail { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Trail != null)
+        {
+            _activeTrail = Trail;
+            _isOpen = true;
+        }
+    }
+
+    private void Close()
+    {
+        _activeTrail = null;
+        _isOpen = false;
+    }
+}

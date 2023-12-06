@@ -1,0 +1,9 @@
+﻿<div class="alert alert-success" role="alert">
+    <span class="bi bi-check-circle-fill mr-2" />
+    @Message
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Message { get; set; } = string.Empty;
+}

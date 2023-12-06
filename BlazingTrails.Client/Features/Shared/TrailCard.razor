@@ -1,0 +1,51 @@
+﻿@inject NavigationManager NavManager
+
+<div class="card shadow" style="width: 18rem; ">
+    @{
+        var image = !string.IsNullOrWhiteSpace(Trail.Image)
+                ? $"images/{Trail.Image}"
+                : "images/noimage.png";
+    }
+    <img src="@image" class="card-img-top" alt="@Trail.Name">
+    <div class="card-body">
+        <h5 class="card-title">@Trail.Name</h5>
+        <h6 class="card-subtitle mb-3 text-muted">
+            <span class="bi bi-pin-map"></span>
+            @Trail.Location
+        </h6>
+        <div class="d-flex justify-content-between mb-3">
+            <span>
+                <span class="bi bi-clock mr-2"></span>
+                @Trail.TimeFormatted
+            </span>
+            <span>
+                <span class="bi bi-infinity mr-2"></span>
+                @Trail.Length km
+            </span>
+        </div>
+        <button class="btn btn-primary" title="View" @onclick="@(() => OnSelected?.Invoke(Trail))">
+            <i class="bi bi-binoculars" />
+        </button>
+
+        <FavoriteButton Trail="Trail" />
+
+        <AuthorizeView>
+            @if (Trail.Owner.Equals(context.User.Identity?.Name, StringComparison.OrdinalIgnoreCase)
+                 || context.User.IsInRole("Administrator"))
+            {
+                <button class="btn btn-outline-secondary float-right" title="Edit"
+                @onclick="@(() => NavManager.NavigateTo($"/edit-trail/{Trail.Id}"))">
+                    <i class="bi bi-pencil" />
+                </button>
+            }
+        </AuthorizeView>
+        
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Trail Trail { get; set; } = default!;
+    [Parameter, EditorRequired]
+    public Action<Trail>? OnSelected { get; set;}
+}

@@ -1,0 +1,13 @@
+@inherits TestContext
+
+@code {
+    [Fact]
+    public void RendersGreeting()
+    {
+        var name = "Robyn";
+
+        var cut = Render(@<Greeter Name="@name" />);
+
+        cut.MarkupMatches(@<h1>Hey! @name. Testing with bUnit is awesome.</h1>);
+    }
+}

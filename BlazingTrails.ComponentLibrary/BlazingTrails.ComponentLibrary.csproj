@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  <NpmLastInstall>node_modules/.last-install</NpmLastInstall>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Map\RouteMap.razor.css">
+      <Watch>false</Watch>
+    </None>
+  </ItemGroup>
+  
+  <Target Name="CheckForNpm" BeforeTargets="RunNpmInstall">
+    <Exec Command="npm --version" ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
+    </Exec>
+    <Error Condition="'$(ErrorCode)' != '0'" Text="NPM is required to build this project." />
+  </Target>
+
+  <Target Name="RunNpmInstall" BeforeTargets="CompileScopedCss" Inputs="package.json" Outputs="$(NpmLastInstall)">
+    <Exec Command="npm install" />
+    <Touch Files="$(NpmLastInstall)" AlwaysCreate="true" />
+  </Target>
+
+  <Target Name="CompileScopedCss" BeforeTargets="Compile">
+    <ItemGroup>
+      <ScopedScssFiles Include="**/*.razor.scss" />
+    </ItemGroup>
+    <Exec Command="npm run sass -- %(ScopedScssFiles.Identity) %(relativedir)%(filename).css" />
+  </Target>
+
+</Project>

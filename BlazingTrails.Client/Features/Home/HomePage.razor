@@ -1,0 +1,114 @@
+﻿@page "/"
+
+@inject IMediator Mediator
+@inject NavigationManager NavManager
+
+<PageTitle>Blazing Trails</PageTitle>
+
+@if (_trails.Any())
+{
+    <TrailDetails Trail="_selectedTrail" />
+
+    <TrailSearch />
+
+    <AuthorizeView>
+        <Authorized>
+            <div class="mb-4">
+                <p class="font-italic text-center">
+                    Do you have an awesome trail you'd like to share?
+                    &nbsp;<a href="add-trail">Add it here</a>.
+                </p>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <div class="mb-4">
+                <p class="font-italic text-center">
+                    Do you have an awesome trail you'd like to share?
+                    &nbsp;Please <a href="#" @onclick="@(() => NavManager.NavigateToLogin("authentication/login"))">
+                        log in or sign up</a>.
+                </p>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+    
+
+    <ViewSwitcher Items="_trails" Context="trail">
+
+        <GridTemplate>
+            <TrailCard Trail="trail" OnSelected="HandleTrailSelected" />
+        </GridTemplate>
+        <HeaderTemplate>
+            <th>Name</th>
+            <th>Location</th>
+            <th>Length</th>
+            <th>Time</th>
+            <th></th>
+        </HeaderTemplate>
+        <RowTemplate>
+            <th scope="col">@trail.Name</th>
+            <td>@trail.Location</td>
+            <td>@(trail.Length)km</td>
+            <td>@trail.TimeFormatted</td>
+            <td class="text-right">
+                <button @onclick="@(() => HandleTrailSelected(trail))"
+                        title="View" class="btn btn-primary">
+                    <i class="bi bi-binoculars" />
+                </button>
+
+                <FavoriteButton Trail="trail" />
+
+                <AuthorizeView>
+                    @if (trail.Owner.Equals(context.User.Identity?.Name, StringComparison.OrdinalIgnoreCase)
+                         || context.User.IsInRole("Administrator"))
+                    {
+                        <button @onclick="@(() => NavManager.NavigateTo($"/edit-trail/{trail.Id}"))"
+                                title="Edit" class="btn btn-outline-secondary">
+                            <i class="bi bi-pencil" />
+                        </button>
+                    }
+                </AuthorizeView>
+            </td>
+        </RowTemplate>
+    </ViewSwitcher>
+    
+} else
+{
+    <NoTrails>
+        We currently don't have any trails, <a href="add-trail">why not add one?</a>
+    </NoTrails>
+}
+
+@code {
+    private IEnumerable<Trail> _trails = new List<Trail>();
+    private Trail? _selectedTrail;
+
+    private void HandleTrailSelected(Trail trail)
+    {
+        _selectedTrail = trail;
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Mediator.Send(new GetTrailsRequest());
+        if (response is null)
+        {
+            Console.WriteLine("There was a problem loading trail data.");
+            return;
+        }
+
+        _trails = response.Trails.Select(x => new Trail
+        {
+                Id = x.Id,
+                Name = x.Name,
+                Image = x.Image ?? string.Empty,
+                Description = x.Description,
+                Location = x.Location,
+                Length = x.Length,
+                TimeInMinutes = x.TimeInMinutes,
+                Owner = x.Owner,
+                Waypoints = x.Waypoints.Select(wp => new BlazingTrails.ComponentLibrary.Map.LatLong(
+                    wp.Latitude, wp.Longitude)).ToList()
+        });
+    }
+}

@@ -1,0 +1,18 @@
+﻿@inject NavigationManager Navigation
+
+<div class="text-right">
+    <AuthorizeView>
+        <Authorized>
+            <div class="text-end">
+                Hello, @context.User.Identity!.Name
+                <a href="#" @onclick="@(() => Navigation.NavigateToLogout(
+                    "authentication/logout", Navigation.BaseUri))">Log Out</a>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <div class="text-end">
+                <a href="#" @onclick="@(() => Navigation.NavigateToLogin("authentication/login"))">Log in/Sign up</a>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>

@@ -1,0 +1,72 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<div class="map-wrapper">
+    @if (!IsReadonly)
+    {
+        <div class="controls">
+            <button @onclick="DeleteLastWaypoint" class="btn btn-secondary"
+                    type="button" title="Delete last waypoint">
+                <i class="bi bi-trash" />
+                &nbsp;Remove Last Waypoint
+            </button>
+        </div>
+    }
+    <div style="height: @(Height); width: @(Width);" @ref="_map"></div>
+</div>
+
+
+@code {
+    private ElementReference _map;
+    private IJSObjectReference? _routeMapModule;
+    private DotNetObjectReference<RouteMap> _routeMapReference = null!;
+
+    [Parameter]
+    public string Height { get; set; } = "500px";
+    [Parameter]
+    public string Width { get; set; } = "1000px";
+    [Parameter]
+    public bool IsReadonly { get; set; }
+
+    [Parameter]
+    public List<LatLong> Waypoints { get; set; } = new();
+    [Parameter]
+    public EventCallback<LatLong> OnWaypointAdded { get; set; }
+    [Parameter]
+    public EventCallback<LatLong> OnWaypointDeleted { get; set; }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _routeMapModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import",
+                "./_content/BlazingTrails.ComponentLibrary/Map/RouteMap.razor.js");
+            _routeMapReference = DotNetObjectReference.Create(this);
+
+            await _routeMapModule.InvokeVoidAsync("initialize", _map, _routeMapReference, Waypoints, IsReadonly);
+        }
+    }
+
+    [JSInvokable]
+    public async Task WaypointAdded(decimal latitude, decimal longitude) =>
+        await OnWaypointAdded.InvokeAsync(new LatLong(latitude, longitude));
+
+    public async Task DeleteLastWaypoint()
+    {
+        if (_routeMapModule is not null)
+        {
+            var waypoint = await _routeMapModule.InvokeAsync<LatLong>("deleteLastWaypoint", _map, _routeMapReference);
+            await OnWaypointDeleted.InvokeAsync(waypoint);
+        }
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if (_routeMapModule is not null)
+            await _routeMapModule.DisposeAsync();
+
+        _routeMapReference.Dispose();
+    }
+}
